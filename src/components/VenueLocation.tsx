@@ -195,10 +195,11 @@ export default function VenueLocation() {
               href={INVITATION_CONFIG.event.googleMapsUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 text-xs text-gold-400 hover:text-gold-300 underline underline-offset-4 font-sans inline-flex items-center gap-1"
+              className="mt-3 px-4 py-2 rounded-full bg-gold-500/15 hover:bg-gold-500/25 border border-gold-400/50 text-gold-300 text-xs font-sans inline-flex items-center gap-1.5 transition-all max-w-full"
             >
-              <span>{INVITATION_CONFIG.event.googleMapsUrl}</span>
-              <ExternalLink className="w-3 h-3" />
+              <MapPin className="w-3.5 h-3.5 text-gold-400 flex-shrink-0" />
+              <span className="font-medium">Open in Google Maps</span>
+              <ExternalLink className="w-3 h-3 opacity-70 flex-shrink-0" />
             </a>
           </div>
         </div>
