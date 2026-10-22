@@ -11,6 +11,9 @@ export const metadata: Metadata = {
     description: `Save the Date: ${INVITATION_CONFIG.event.date} at ${INVITATION_CONFIG.event.venueName}`,
     type: "website",
   },
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
