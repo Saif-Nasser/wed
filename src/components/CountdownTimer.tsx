@@ -23,7 +23,19 @@ export default function CountdownTimer() {
 
   useEffect(() => {
     setMounted(true);
-    const target = new Date(INVITATION_CONFIG.event.isoDate).getTime();
+    // Compute tomorrow at 8:00 PM (20:00:00)
+    const computeTarget = () => {
+      const parsed = new Date(INVITATION_CONFIG.event.isoDate).getTime();
+      if (!isNaN(parsed) && parsed > Date.now()) {
+        return parsed;
+      }
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      tomorrow.setHours(20, 0, 0, 0);
+      return tomorrow.getTime();
+    };
+
+    const target = computeTarget();
 
     const calculateTime = () => {
       const now = new Date().getTime();

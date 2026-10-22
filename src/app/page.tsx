@@ -5,7 +5,6 @@ import FloatingParticles from "@/components/FloatingParticles";
 import AudioPlayer from "@/components/AudioPlayer";
 import WaxSealHero from "@/components/WaxSealHero";
 import CountdownTimer from "@/components/CountdownTimer";
-import OurStory from "@/components/OurStory";
 import EventSchedule from "@/components/EventSchedule";
 import VenueLocation from "@/components/VenueLocation";
 import RsvpSection from "@/components/RsvpSection";
@@ -28,16 +27,13 @@ export default function HomePage() {
         {/* Live Countdown Clock */}
         <CountdownTimer />
 
-        {/* Story / Milestones */}
-        <OurStory />
-
-        {/* Ceremony & Reception Schedule */}
+        {/* Order of Events (8:00 PM start, 11:00 PM end) */}
         <EventSchedule />
 
-        {/* Venue, Map, Calendar, and Dress Code */}
+        {/* Venue, Map, and Location QR Code */}
         <VenueLocation />
 
-        {/* Interactive RSVP Form with Supabase persistence */}
+        {/* Interactive RSVP Form */}
         <RsvpSection />
 
         {/* Footer */}
