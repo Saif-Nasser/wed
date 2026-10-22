@@ -37,7 +37,7 @@ export default function VenueLocation() {
     const blob = new Blob([icsData], { type: "text/calendar;charset=utf-8" });
     const link = document.createElement("a");
     link.href = window.URL.createObjectURL(blob);
-    link.setAttribute("download", "Sophia-Alexander-Engagement.ics");
+    link.setAttribute("download", `${INVITATION_CONFIG.couple.shortNames.replace(/\s+/g, "-")}-Engagement.ics`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

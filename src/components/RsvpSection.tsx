@@ -4,27 +4,22 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Send,
-  Heart,
   CheckCircle2,
   AlertCircle,
-  Users,
-  Sparkles,
-  CalendarCheck2,
   Eye,
   Info,
+  CalendarCheck2,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { submitRsvp, isSupabaseConfigured } from "@/lib/supabase";
+import { INVITATION_CONFIG } from "@/config/invitation";
 import Link from "next/link";
 
 export default function RsvpSection() {
   const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
   const [isAttending, setIsAttending] = useState(true);
-  const [attendingEvents, setAttendingEvents] = useState<"ceremony" | "reception" | "both">("both");
+  const [guestSide, setGuestSide] = useState<"lady" | "gentleman" | "both">("lady");
   const [guestCount, setGuestCount] = useState(1);
-  const [dietary, setDietary] = useState("");
   const [message, setMessage] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -34,8 +29,8 @@ export default function RsvpSection() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim() || !email.trim()) {
-      setSubmitError("Please fill in your name and email address.");
+    if (!fullName.trim()) {
+      setSubmitError("Please fill in your full name.");
       return;
     }
 
@@ -44,12 +39,9 @@ export default function RsvpSection() {
 
     const result = await submitRsvp({
       full_name: fullName.trim(),
-      email: email.trim(),
-      phone: phone.trim() || undefined,
       is_attending: isAttending,
-      attending_events: isAttending ? attendingEvents : "both",
+      guest_side: guestSide,
       guest_count: isAttending ? guestCount : 0,
-      dietary_preferences: dietary.trim() || undefined,
       message_to_couple: message.trim() || undefined,
     });
 
@@ -73,12 +65,9 @@ export default function RsvpSection() {
 
   const handleReset = () => {
     setFullName("");
-    setEmail("");
-    setPhone("");
     setIsAttending(true);
-    setAttendingEvents("both");
+    setGuestSide("lady");
     setGuestCount(1);
-    setDietary("");
     setMessage("");
     setSubmitSuccess(false);
     setSubmitError(null);
@@ -86,7 +75,7 @@ export default function RsvpSection() {
 
   return (
     <section id="rsvp" className="relative py-24 px-4 bg-noir-900/80 border-t border-gold-500/20 backdrop-blur-md">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Section Heading */}
         <div className="text-center mb-12">
           <motion.div
@@ -117,16 +106,16 @@ export default function RsvpSection() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="text-sm sm:text-base text-cream-300/80 font-serif italic mt-3 max-w-md mx-auto"
           >
-            Your presence would make our special celebration complete. Please let us know by November 15, 2026.
+            Your presence would make our engagement ceremony complete. Please let {INVITATION_CONFIG.couple.shortNames} know by November 15, 2026.
           </motion.p>
 
-          {/* Database Mode status pill */}
+          {/* Database Mode status indicator */}
           <div className="mt-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] bg-noir-800 border border-gold-500/30 text-cream-300">
             <Info className="w-3 h-3 text-gold-400" />
             <span>
               {isSupabaseConfigured
                 ? "Connected to Live Supabase Database"
-                : "Interactive Demo Mode (Stored locally until Supabase keys are added in .env.local)"}
+                : "Interactive Demo Mode"}
             </span>
           </div>
         </div>
@@ -165,19 +154,13 @@ export default function RsvpSection() {
                   : `Thank you, ${fullName}. Even though you cannot join us in person, your blessings and warm thoughts mean the world to us.`}
               </p>
 
-              {isLocalMode && (
-                <div className="p-3 bg-gold-500/10 border border-gold-500/30 rounded text-xs text-gold-300 max-w-md">
-                  ✨ Response saved to browser local store. To sync with a remote Supabase database, set your Supabase credentials in <code>.env.local</code>.
-                </div>
-              )}
-
               <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
                 <Link
                   href="/responses"
                   className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-gold-500 hover:bg-gold-400 text-noir-900 font-medium text-xs tracking-wider uppercase transition-all shadow-lg shadow-gold-500/20"
                 >
                   <Eye className="w-4 h-4" />
-                  <span>View All RSVP Responses</span>
+                  <span>View Guest Attendance List</span>
                 </Link>
 
                 <button
@@ -197,52 +180,23 @@ export default function RsvpSection() {
                 </div>
               )}
 
-              {/* 1. Name & Contact */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                    Full Name <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Lady Vivienne & Lord Sterling"
-                    className="w-full px-4 py-3 rounded bg-noir-900/90 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 focus:outline-none focus:border-gold-400 text-sm font-sans transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                    Email Address <span className="text-red-400">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. vivienne@example.com"
-                    className="w-full px-4 py-3 rounded bg-noir-900/90 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 focus:outline-none focus:border-gold-400 text-sm font-sans transition-colors"
-                  />
-                </div>
-              </div>
-
+              {/* 1. Full Name */}
               <div>
                 <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                  Phone Number (Optional)
+                  Full Name <span className="text-red-400">*</span>
                 </label>
                 <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+1 (555) 000-0000"
+                  type="text"
+                  required
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  placeholder="e.g. Tariq & Mona Al-Mansoor"
                   className="w-full px-4 py-3 rounded bg-noir-900/90 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 focus:outline-none focus:border-gold-400 text-sm font-sans transition-colors"
                 />
               </div>
 
               {/* 2. ATTENDANCE CHECKBOX (Coming or Not) */}
-              <div className="pt-2">
+              <div>
                 <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-3">
                   Attendance Confirmation
                 </label>
@@ -255,7 +209,6 @@ export default function RsvpSection() {
                   }`}
                 >
                   <div className="flex items-center gap-3">
-                    {/* Visual Checkbox element */}
                     <div
                       className={`w-6 h-6 rounded flex items-center justify-center border transition-colors ${
                         isAttending
@@ -289,7 +242,7 @@ export default function RsvpSection() {
                 </div>
               </div>
 
-              {/* 3. EVENT SELECTION TOGGLE (Which event are they coming to?) */}
+              {/* 3. SIDE SELECTION (Lady's Side vs Gentleman's Side) */}
               <AnimatePresence>
                 {isAttending && (
                   <motion.div
@@ -301,71 +254,71 @@ export default function RsvpSection() {
                   >
                     <div>
                       <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                        Which Events Will You Be Attending?
+                        Which Side Are You Celebrating With?
                       </label>
                       <p className="text-xs text-cream-400/70 font-sans mb-3">
-                        Choose whether you are joining the ceremony, reception, or the entire evening:
+                        Please let us know if you are joining from the lady&apos;s side or gentleman&apos;s side:
                       </p>
 
-                      {/* 3-way segmented toggle */}
+                      {/* Side selector */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <button
                           type="button"
-                          onClick={() => setAttendingEvents("ceremony")}
+                          onClick={() => setGuestSide("lady")}
                           className={`p-3.5 rounded-lg border text-left transition-all ${
-                            attendingEvents === "ceremony"
+                            guestSide === "lady"
                               ? "bg-gold-500/20 border-gold-400 shadow-md shadow-gold-500/10 text-gold-200"
                               : "bg-noir-900/60 border-gold-500/20 text-cream-300 hover:border-gold-500/40"
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-serif uppercase tracking-wider font-semibold">
-                              Ceremony
+                              Lady&apos;s Side
                             </span>
-                            <span className="text-base">💍</span>
+                            <span className="text-base">👰</span>
                           </div>
                           <p className="text-[11px] text-cream-400/70 font-sans leading-tight">
-                            5:00 PM • Vows & Ring Exchange
+                            Lina&apos;s Family & Friends
                           </p>
                         </button>
 
                         <button
                           type="button"
-                          onClick={() => setAttendingEvents("reception")}
+                          onClick={() => setGuestSide("gentleman")}
                           className={`p-3.5 rounded-lg border text-left transition-all ${
-                            attendingEvents === "reception"
+                            guestSide === "gentleman"
                               ? "bg-gold-500/20 border-gold-400 shadow-md shadow-gold-500/10 text-gold-200"
                               : "bg-noir-900/60 border-gold-500/20 text-cream-300 hover:border-gold-500/40"
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-serif uppercase tracking-wider font-semibold">
-                              Reception
+                              Gentleman&apos;s Side
                             </span>
-                            <span className="text-base">🥂</span>
+                            <span className="text-base">🤵</span>
                           </div>
                           <p className="text-[11px] text-cream-400/70 font-sans leading-tight">
-                            7:15 PM • Banquet & Dancing
+                            Khaled&apos;s Family & Friends
                           </p>
                         </button>
 
                         <button
                           type="button"
-                          onClick={() => setAttendingEvents("both")}
+                          onClick={() => setGuestSide("both")}
                           className={`p-3.5 rounded-lg border text-left transition-all ${
-                            attendingEvents === "both"
+                            guestSide === "both"
                               ? "bg-gold-500/20 border-gold-400 shadow-md shadow-gold-500/10 text-gold-200"
                               : "bg-noir-900/60 border-gold-500/20 text-cream-300 hover:border-gold-500/40"
                           }`}
                         >
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-serif uppercase tracking-wider font-semibold">
-                              Both Events
+                              Both / Mutual
                             </span>
                             <span className="text-base">✨</span>
                           </div>
                           <p className="text-[11px] text-cream-400/70 font-sans leading-tight">
-                            Full Evening Celebration
+                            Friends of Both
                           </p>
                         </button>
                       </div>
@@ -401,20 +354,6 @@ export default function RsvpSection() {
                         </span>
                       </div>
                     </div>
-
-                    {/* Dietary */}
-                    <div>
-                      <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                        Dietary Preferences or Allergies (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={dietary}
-                        onChange={(e) => setDietary(e.target.value)}
-                        placeholder="e.g. Vegetarian, Gluten-free, Nut allergy"
-                        className="w-full px-4 py-3 rounded bg-noir-900/90 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 focus:outline-none focus:border-gold-400 text-sm font-sans transition-colors"
-                      />
-                    </div>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -422,13 +361,13 @@ export default function RsvpSection() {
               {/* 4. Warm Wishes / Message */}
               <div>
                 <label className="block text-xs uppercase tracking-widest text-gold-400 font-serif mb-2">
-                  Message or Warm Wishes for the Couple
+                  Message or Warm Wishes for Lina & Khaled
                 </label>
                 <textarea
                   rows={3}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
-                  placeholder="Share a sweet memory, congratulations, or song request..."
+                  placeholder="Share a sweet memory, congratulations, or warm blessings..."
                   className="w-full px-4 py-3 rounded bg-noir-900/90 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 focus:outline-none focus:border-gold-400 text-sm font-sans transition-colors resize-none"
                 />
               </div>

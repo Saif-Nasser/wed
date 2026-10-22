@@ -12,10 +12,6 @@ import {
   Filter,
   RefreshCw,
   Heart,
-  CalendarCheck,
-  Wine,
-  Mail,
-  Phone,
   MessageSquare,
   Sparkles,
 } from "lucide-react";
@@ -27,7 +23,7 @@ export default function ResponsesPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "attending" | "declining">("all");
-  const [eventFilter, setEventFilter] = useState<"all" | "ceremony" | "reception" | "both">("all");
+  const [sideFilter, setSideFilter] = useState<"all" | "lady" | "gentleman" | "both">("all");
   const [isLocal, setIsLocal] = useState(false);
 
   const loadData = async () => {
@@ -45,9 +41,7 @@ export default function ResponsesPage() {
   // Filtered RSVPs
   const filteredRsvps = rsvps.filter((item) => {
     // Search
-    const matchesSearch =
-      item.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = item.full_name.toLowerCase().includes(searchQuery.toLowerCase());
 
     // Status filter
     const matchesStatus =
@@ -57,15 +51,15 @@ export default function ResponsesPage() {
         ? item.is_attending
         : !item.is_attending;
 
-    // Event filter
-    const matchesEvent =
-      eventFilter === "all"
+    // Side filter
+    const matchesSide =
+      sideFilter === "all"
         ? true
         : !item.is_attending
         ? false
-        : item.attending_events === eventFilter || item.attending_events === "both";
+        : item.guest_side === sideFilter || item.guest_side === "both";
 
-    return matchesSearch && matchesStatus && matchesEvent;
+    return matchesSearch && matchesStatus && matchesSide;
   });
 
   // KPI Calculations
@@ -75,38 +69,41 @@ export default function ResponsesPage() {
   const totalHeadcount = rsvps
     .filter((r) => r.is_attending)
     .reduce((sum, r) => sum + (r.guest_count || 1), 0);
-  const ceremonyCount = rsvps.filter(
-    (r) => r.is_attending && (r.attending_events === "ceremony" || r.attending_events === "both")
+  const ladyCount = rsvps.filter(
+    (r) => r.is_attending && (r.guest_side === "lady" || r.guest_side === "both")
   ).length;
-  const receptionCount = rsvps.filter(
-    (r) => r.is_attending && (r.attending_events === "reception" || r.attending_events === "both")
+  const gentlemanCount = rsvps.filter(
+    (r) => r.is_attending && (r.guest_side === "gentleman" || r.guest_side === "both")
   ).length;
 
   // Export to CSV
   const handleExportCsv = () => {
     const headers = [
       "Full Name",
-      "Email",
-      "Phone",
       "Attending",
-      "Events",
+      "Celebrating With",
       "Guest Count",
-      "Dietary Preferences",
       "Message to Couple",
       "Date Submitted",
     ];
 
-    const rows = filteredRsvps.map((r) => [
-      `"${r.full_name.replace(/"/g, '""')}"`,
-      `"${r.email.replace(/"/g, '""')}"`,
-      `"${(r.phone || "").replace(/"/g, '""')}"`,
-      r.is_attending ? "Yes" : "No",
-      r.is_attending ? r.attending_events : "N/A",
-      r.is_attending ? r.guest_count : 0,
-      `"${(r.dietary_preferences || "").replace(/"/g, '""')}"`,
-      `"${(r.message_to_couple || "").replace(/"/g, '""')}"`,
-      new Date(r.created_at).toLocaleDateString(),
-    ]);
+    const rows = filteredRsvps.map((r) => {
+      const sideText =
+        r.guest_side === "lady"
+          ? "Lady's Side (Lina)"
+          : r.guest_side === "gentleman"
+          ? "Gentleman's Side (Khaled)"
+          : "Both / Mutual";
+
+      return [
+        `"${r.full_name.replace(/"/g, '""')}"`,
+        r.is_attending ? "Yes" : "No",
+        r.is_attending ? `"${sideText}"` : "N/A",
+        r.is_attending ? r.guest_count : 0,
+        `"${(r.message_to_couple || "").replace(/"/g, '""')}"`,
+        new Date(r.created_at).toLocaleDateString(),
+      ];
+    });
 
     const csvContent =
       "data:text/csv;charset=utf-8," +
@@ -126,7 +123,7 @@ export default function ResponsesPage() {
 
   return (
     <div className="min-h-screen bg-[#0B0D0F] text-[#F7F3EB] px-4 py-12">
-      <div className="max-w-6xl mx-auto space-y-10">
+      <div className="max-w-5xl mx-auto space-y-10">
         {/* Top Navigation */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gold-500/20 pb-6">
           <Link
@@ -165,10 +162,10 @@ export default function ResponsesPage() {
             Guest List Management
           </span>
           <h1 className="font-serif text-3xl sm:text-4xl text-cream-50 font-normal gold-gradient-text mt-1">
-            RSVP Responses & Attendance
+            RSVP Responses & Guest Breakdown
           </h1>
           <p className="text-xs sm:text-sm text-cream-300/70 font-sans mt-1">
-            Showing all confirmed guests and responses for {INVITATION_CONFIG.couple.shortNames}&apos;s engagement ceremony.
+            Showing all confirmed guests and side choices for {INVITATION_CONFIG.couple.shortNames}&apos;s engagement ceremony.
           </p>
         </div>
 
@@ -205,24 +202,24 @@ export default function ResponsesPage() {
 
           <div className="p-5 rounded-lg bg-noir-800/80 gold-card-border">
             <div className="flex items-center justify-between text-xs text-gold-400 font-sans mb-1">
-              <span>Ceremony / Reception</span>
-              <Wine className="w-4 h-4 text-gold-400" />
+              <span>Lady vs Gentleman</span>
+              <Sparkles className="w-4 h-4 text-gold-400" />
             </div>
             <p className="font-serif text-xl sm:text-2xl text-gold-300 font-light mt-1">
-              {ceremonyCount} <span className="text-xs text-cream-400">cerm.</span> / {receptionCount} <span className="text-xs text-cream-400">recp.</span>
+              {ladyCount} <span className="text-xs text-cream-400">👰</span> / {gentlemanCount} <span className="text-xs text-cream-400">🤵</span>
             </p>
-            <span className="text-[11px] text-cream-400/60 font-sans">Event distribution</span>
+            <span className="text-[11px] text-cream-400/60 font-sans">Side distribution</span>
           </div>
         </div>
 
         {/* Filter Toolbar */}
         <div className="p-4 rounded-xl bg-noir-800/80 gold-card-border flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Search */}
+          {/* Search by guest name */}
           <div className="relative w-full md:w-72">
             <Search className="w-4 h-4 text-gold-500/60 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search by name or email..."
+              placeholder="Search by guest name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 rounded bg-noir-900 border border-gold-500/30 text-cream-100 placeholder:text-cream-400/40 text-xs font-sans focus:outline-none focus:border-gold-400"
@@ -246,18 +243,18 @@ export default function ResponsesPage() {
               </select>
             </div>
 
-            {/* Event Filter */}
+            {/* Side Filter */}
             <div className="flex items-center gap-1.5 text-xs text-cream-300 font-sans">
-              <span>Event:</span>
+              <span>Side:</span>
               <select
-                value={eventFilter}
-                onChange={(e) => setEventFilter(e.target.value as "all" | "ceremony" | "reception" | "both")}
+                value={sideFilter}
+                onChange={(e) => setSideFilter(e.target.value as "all" | "lady" | "gentleman" | "both")}
                 className="px-2.5 py-1.5 rounded bg-noir-900 border border-gold-500/30 text-cream-100 text-xs font-sans focus:outline-none"
               >
-                <option value="all">All Events</option>
-                <option value="ceremony">Ceremony</option>
-                <option value="reception">Reception</option>
-                <option value="both">Both Events</option>
+                <option value="all">All Sides</option>
+                <option value="lady">Lady&apos;s Side (Lina)</option>
+                <option value="gentleman">Gentleman&apos;s Side (Khaled)</option>
+                <option value="both">Both / Mutual</option>
               </select>
             </div>
 
@@ -281,36 +278,23 @@ export default function ResponsesPage() {
                 <tr>
                   <th className="py-3.5 px-4">Guest Name</th>
                   <th className="py-3.5 px-4">Attendance</th>
-                  <th className="py-3.5 px-4">Selected Event</th>
+                  <th className="py-3.5 px-4">Celebrating With</th>
                   <th className="py-3.5 px-4 text-center">Party Size</th>
-                  <th className="py-3.5 px-4">Dietary Notes</th>
                   <th className="py-3.5 px-4">Date</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gold-500/10 text-cream-200">
                 {filteredRsvps.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-12 text-cream-400/60 font-serif italic text-sm">
+                    <td colSpan={5} className="text-center py-12 text-cream-400/60 font-serif italic text-sm">
                       No matching RSVP responses found.
                     </td>
                   </tr>
                 ) : (
                   filteredRsvps.map((rsvp) => (
                     <tr key={rsvp.id} className="hover:bg-gold-500/5 transition-colors">
-                      <td className="py-3.5 px-4 font-medium text-cream-50">
-                        <div>{rsvp.full_name}</div>
-                        <div className="text-[11px] text-cream-400/70 flex items-center gap-2 mt-0.5">
-                          <span className="flex items-center gap-1">
-                            <Mail className="w-3 h-3 text-gold-500/60" />
-                            {rsvp.email}
-                          </span>
-                          {rsvp.phone && (
-                            <span className="flex items-center gap-1">
-                              <Phone className="w-3 h-3 text-gold-500/60" />
-                              {rsvp.phone}
-                            </span>
-                          )}
-                        </div>
+                      <td className="py-3.5 px-4 font-medium text-cream-50 text-sm">
+                        {rsvp.full_name}
                       </td>
 
                       <td className="py-3.5 px-4">
@@ -329,12 +313,12 @@ export default function ResponsesPage() {
 
                       <td className="py-3.5 px-4">
                         {rsvp.is_attending ? (
-                          <span className="capitalize px-2 py-0.5 rounded bg-noir-900 border border-gold-500/30 text-gold-300 text-[11px]">
-                            {rsvp.attending_events === "both"
-                              ? "✨ Both Events"
-                              : rsvp.attending_events === "ceremony"
-                              ? "💍 Ceremony Only"
-                              : "🥂 Reception Only"}
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded bg-noir-900 border border-gold-500/30 text-gold-300 text-[11px]">
+                            {rsvp.guest_side === "lady"
+                              ? "👰 Lady's Side (Lina)"
+                              : rsvp.guest_side === "gentleman"
+                              ? "🤵 Gentleman's Side (Khaled)"
+                              : "✨ Both / Mutual"}
                           </span>
                         ) : (
                           <span className="text-cream-500/50">—</span>
@@ -343,10 +327,6 @@ export default function ResponsesPage() {
 
                       <td className="py-3.5 px-4 text-center font-serif text-sm">
                         {rsvp.is_attending ? rsvp.guest_count : 0}
-                      </td>
-
-                      <td className="py-3.5 px-4 text-cream-300/80 max-w-[200px] truncate">
-                        {rsvp.dietary_preferences || <span className="text-cream-500/50">None specified</span>}
                       </td>
 
                       <td className="py-3.5 px-4 text-cream-400/60 whitespace-nowrap">
@@ -365,7 +345,7 @@ export default function ResponsesPage() {
           <div className="flex items-center gap-2 mb-6">
             <MessageSquare className="w-5 h-5 text-gold-400" />
             <h2 className="font-serif text-2xl text-cream-100 font-normal">
-              Heartfelt Wishes & Messages from Guests
+              Heartfelt Wishes for Lina & Khaled
             </h2>
           </div>
 
